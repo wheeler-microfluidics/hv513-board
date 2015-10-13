@@ -53,6 +53,7 @@ public:
   static const uint16_t CHANNEL_COUNT = 64;
 
   uint8_t buffer_[BUFFER_SIZE];
+  uint8_t state_of_channels_[CHANNEL_COUNT / 8];  // 8 channels per byte
 
   Node() : BaseNode(), BaseNodeConfig<config_t>(hv507_switching_board_Config_fields),
            BaseNodeState<state_t>(hv507_switching_board_State_fields) {}
@@ -82,6 +83,20 @@ public:
    * [2]: https://github.com/wheeler-microfluidics/base_node_rpc
    */
   uint16_t channel_count() const { return CHANNEL_COUNT; }
+
+  UInt8Array state_of_channels() const {
+    return UInt8Array(sizeof(state_of_channels_),
+                      (uint8_t *)&state_of_channels_[0]);
+  }
+  bool set_state_of_channels(UInt8Array channel_states) {
+    if (channel_states.length == sizeof(state_of_channels_)) {
+      for (uint16_t i = 0; i < channel_states.length; i++) {
+        state_of_channels_[i] = channel_states.data[i];
+      }
+      return true;
+    }
+    return false;
+  }
 };
 
 }  // namespace hv507_switching_board
