@@ -50,6 +50,7 @@ public:
   typedef PacketParser<FixedPacket> parser_t;
 
   static const uint16_t BUFFER_SIZE = 128;  // >= longest property string
+  static const uint16_t CHANNEL_COUNT = 64;
 
   uint8_t buffer_[BUFFER_SIZE];
 
@@ -80,6 +81,7 @@ public:
    * [1]: https://github.com/wheeler-microfluidics/arduino_rpc
    * [2]: https://github.com/wheeler-microfluidics/base_node_rpc
    */
+  uint16_t channel_count() const { return CHANNEL_COUNT; }
 };
 
 }  // namespace hv507_switching_board
