@@ -62,6 +62,54 @@ try:
 
             state = State(**kwargs)
             return super(ProxyMixin, self).update_state(state)
+        
+        def _state_of_channels(self):
+            '''
+            Prepend underscore to the auto-generated state_of_channels accessor
+            '''
+            return super(ProxyMixin, self).state_of_channels()
+
+        def _set_state_of_channels(self, states):
+            '''
+            Prepend underscore to the auto-generated state_of_channels setter
+            '''
+            return super(ProxyMixin, self).set_state_of_channels(states)
+
+        @property
+        def state_of_channels(self):
+            '''
+            Retrieve the state bytes from the device and unpacks them into an
+            array with one entry per channel.  Return unpacked array.
+
+            Notes
+            -----
+
+            State of each channel is binary, 0 or 1.  On device, states are
+            stored in bytes, where each byte corresponds to the state of eight
+            channels.
+            '''
+            import numpy as np
+
+            return np.unpackbits(super(ProxyMixin, self).state_of_channels())
+
+        @state_of_channels.setter
+        def state_of_channels(self, states):
+            self.set_state_of_channels(states)
+
+        def set_state_of_channels(self, states):
+            '''
+            Pack array containing one entry per channel to bytes (8 channels
+            per byte).  Set state of channels on device using state bytes.
+
+            See also: `state_of_channels` (get)
+            '''
+            import numpy as np
+
+            ok =  (super(ProxyMixin, self)
+                    .set_state_of_channels(np.packbits(states)))
+            if not ok:
+                raise ValueError('Error setting state of channels.  Check '
+                                 'number of states matches channel count.')
 
 
     class Proxy(ProxyMixin, _Proxy):
