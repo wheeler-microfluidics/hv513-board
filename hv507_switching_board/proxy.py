@@ -104,12 +104,50 @@ try:
             See also: `state_of_channels` (get)
             '''
             import numpy as np
-
+            
             ok =  (super(ProxyMixin, self)
-                    .set_state_of_channels(np.packbits(states)))
+                    .set_state_of_channels(np.packbits(states.astype(int))))
             if not ok:
                 raise ValueError('Error setting state of channels.  Check '
                                  'number of states matches channel count.')
+                
+        @property
+        def baud_rate(self):
+            return self.config.baud_rate
+
+        @baud_rate.setter
+        def baud_rate(self, baud_rate):
+            return self.update_config(baud_rate=baud_rate)
+
+        @property
+        def serial_number(self):
+            return self.config.serial_number
+
+        @serial_number.setter
+        def serial_number(self, serial_number):
+            return self.update_config(serial_number=serial_number)
+        
+        @property
+        def port(self):
+            return self._stream.serial_device.port
+
+        @port.setter
+        def port(self, port):
+            return self.update_config(port=port)
+        
+        def _channel_count(self):
+            return super(ProxyMixin, self).channel_count()
+        
+        @property
+        def channel_count(self):
+            return self._channel_count()
+        
+        @property
+        def hardware_version(self):
+            '''
+            Placeholder for a remote hardware_version accessor
+            '''
+            return '1.0'
 
 
     class Proxy(ProxyMixin, _Proxy):
