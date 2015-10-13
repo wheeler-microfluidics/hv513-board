@@ -21,6 +21,9 @@ message Config {
    *      optional float my_float_field = 50;
    *      optional int32 my_int_field = 51;
    */
+  optional float max_waveform_voltage = 50 [default = 200];
+  optional float min_waveform_frequency = 51;
+  optional float max_waveform_frequency = 52 [default = 10000];
 }
 
 
