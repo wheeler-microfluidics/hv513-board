@@ -6,7 +6,7 @@
 #include <NadaMQ.h>
 #include <CArrayDefs.h>
 #include "RPCBuffer.h"  // Define packet sizes
-#include "RpcProjectTemplate/Properties.h"  // Define package name, URL, etc.
+#include "Hv507SwitchingBoard/Properties.h"  // Define package name, URL, etc.
 #include <BaseNodeRpc/BaseNodeRpc.h>
 #include <BaseNodeRpc/BaseNodeEeprom.h>
 #include <BaseNodeRpc/BaseNodeI2c.h>
@@ -18,12 +18,12 @@
 #include <BaseNodeRpc/SerialHandler.h>
 #include <pb_validate.h>
 #include <pb_eeprom.h>
-#include "rpc_project_template_config_validate.h"
-#include "rpc_project_template_state_validate.h"
-#include "RpcProjectTemplate/config_pb.h"
+#include "hv507_switching_board_config_validate.h"
+#include "hv507_switching_board_state_validate.h"
+#include "Hv507SwitchingBoard/config_pb.h"
 
 
-namespace rpc_project_template {
+namespace hv507_switching_board {
 const size_t FRAME_SIZE = (3 * sizeof(uint8_t)  // Frame boundary
                            - sizeof(uint16_t)  // UUID
                            - sizeof(uint16_t)  // Payload length
@@ -31,9 +31,9 @@ const size_t FRAME_SIZE = (3 * sizeof(uint8_t)  // Frame boundary
 
 class Node;
 
-typedef nanopb::EepromMessage<rpc_project_template_Config,
+typedef nanopb::EepromMessage<hv507_switching_board_Config,
                               config_validate::Validator<Node> > config_t;
-typedef nanopb::Message<rpc_project_template_State,
+typedef nanopb::Message<hv507_switching_board_State,
                         state_validate::Validator<Node> > state_t;
 
 class Node :
@@ -53,8 +53,8 @@ public:
 
   uint8_t buffer_[BUFFER_SIZE];
 
-  Node() : BaseNode(), BaseNodeConfig<config_t>(rpc_project_template_Config_fields),
-           BaseNodeState<state_t>(rpc_project_template_State_fields) {}
+  Node() : BaseNode(), BaseNodeConfig<config_t>(hv507_switching_board_Config_fields),
+           BaseNodeState<state_t>(hv507_switching_board_State_fields) {}
 
   UInt8Array get_buffer() { return UInt8Array(sizeof(buffer_), buffer_); }
   /* This is a required method to provide a temporary buffer to the
@@ -82,7 +82,7 @@ public:
    */
 };
 
-}  // namespace rpc_project_template
+}  // namespace hv507_switching_board
 
 
 #endif  // #ifndef ___NODE__H___

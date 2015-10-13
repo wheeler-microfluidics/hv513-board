@@ -1,4 +1,4 @@
-package rpc_project_template;
+package hv507_switching_board;
 
 message Config {
   /* # Configuration structure #
