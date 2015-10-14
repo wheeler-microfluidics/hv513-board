@@ -37,6 +37,11 @@ void Node::begin() {
   // also put SCK, MOSI into LOW state, and SS into HIGH state.
   // Then put SPI hardware into Master mode and turn SPI on
   SPI.begin();
+
+  Timer1.initialize(1000); // initialize timer1, and set a 1 ms period
+
+  // attach timer_callback() as a timer overflow interrupt
+  Timer1.attachInterrupt(timer_callback);
 }
 
 void Node::set_i2c_address(uint8_t value) {

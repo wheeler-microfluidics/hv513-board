@@ -22,6 +22,7 @@
 #include "hv507_switching_board_config_validate.h"
 #include "hv507_switching_board_state_validate.h"
 #include "Hv507SwitchingBoard/config_pb.h"
+#include "TimerOne/TimerOne.h"
 
 
 namespace hv507_switching_board {
@@ -50,6 +51,8 @@ class Node :
   public BaseNodeI2cHandler<base_node_rpc::i2c_handler_t> {
 public:
   typedef PacketParser<FixedPacket> parser_t;
+
+  static void timer_callback();
 
   static const uint16_t BUFFER_SIZE = 128;  // >= longest property string
   static const uint16_t CHANNEL_COUNT = 128;
