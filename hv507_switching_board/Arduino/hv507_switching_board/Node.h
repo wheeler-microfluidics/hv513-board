@@ -10,6 +10,7 @@
 #include <BaseNodeRpc/BaseNodeRpc.h>
 #include <BaseNodeRpc/BaseNodeEeprom.h>
 #include <BaseNodeRpc/BaseNodeI2c.h>
+#include <BaseNodeRpc/BaseNodeSpi.h>
 #include <BaseNodeRpc/BaseNodeConfig.h>
 #include <BaseNodeRpc/BaseNodeState.h>
 #include <BaseNodeRpc/BaseNodeSerialHandler.h>
@@ -40,6 +41,7 @@ class Node :
   public BaseNode,
   public BaseNodeEeprom,
   public BaseNodeI2c,
+  public BaseNodeSpi,
   public BaseNodeConfig<config_t>,
   public BaseNodeState<state_t>,
 #ifndef DISABLE_SERIAL
@@ -50,7 +52,13 @@ public:
   typedef PacketParser<FixedPacket> parser_t;
 
   static const uint16_t BUFFER_SIZE = 128;  // >= longest property string
-  static const uint16_t CHANNEL_COUNT = 64;
+  static const uint16_t CHANNEL_COUNT = 128;
+
+  // pins connected to the HV507
+  static const uint8_t DIR_PIN = 10;
+  static const uint8_t POL_PIN = 9;
+  static const uint8_t BL_PIN = 8;
+  static const uint8_t LE_PIN = 4;
 
   uint8_t buffer_[BUFFER_SIZE];
   uint8_t state_of_channels_[CHANNEL_COUNT / 8];  // 8 channels per byte
@@ -88,11 +96,15 @@ public:
     return UInt8Array(sizeof(state_of_channels_),
                       (uint8_t *)&state_of_channels_[0]);
   }
+
   bool set_state_of_channels(UInt8Array channel_states) {
     if (channel_states.length == sizeof(state_of_channels_)) {
+      digitalWrite(LE_PIN, 0);
       for (uint16_t i = 0; i < channel_states.length; i++) {
         state_of_channels_[i] = channel_states.data[i];
+        SPI.transfer(state_of_channels_[i]);
       }
+      digitalWrite(LE_PIN, 1);
       return true;
     }
     return false;
