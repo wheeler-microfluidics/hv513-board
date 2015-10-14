@@ -25,8 +25,8 @@ void Node::begin() {
   // set DIOA as data in
   digitalWrite(DIR_PIN, LOW);
 
-  // set not blank to HIGH (no blanking)
-  digitalWrite(BL_PIN, HIGH);
+  // set not blank to LOW (blanked)
+  digitalWrite(BL_PIN, LOW);
 
   // set polarity to ?
   digitalWrite(POL_PIN, HIGH);
@@ -38,10 +38,22 @@ void Node::begin() {
   // Then put SPI hardware into Master mode and turn SPI on
   SPI.begin();
 
-  Timer1.initialize(1000); // initialize timer1, and set a 1 ms period
+  // set all channels into off state
+  digitalWrite(LE_PIN, 0);
+  for (uint16_t i = 0; i < CHANNEL_COUNT / 8; i++) {
+    SPI.transfer(state_of_channels_[i]);
+  }
+  digitalWrite(LE_PIN, 1);
+
+  Timer1.initialize(50); // initialize timer1, and set a 0.05 ms period
 
   // attach timer_callback() as a timer overflow interrupt
   Timer1.attachInterrupt(timer_callback);
+}
+
+void Node::timer_callback() {
+  uint8_t state = digitalRead(Node::BL_PIN);
+  digitalWrite(Node::BL_PIN, !state);
 }
 
 void Node::set_i2c_address(uint8_t value) {

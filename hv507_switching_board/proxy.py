@@ -32,6 +32,14 @@ try:
         def state(self, value):
             return self.update_state(value)
 
+        @property
+        def frequency(self):
+            return self.state.frequency
+        
+        @frequency.setter
+        def frequency(self, value):
+            return self.update_state(frequency=value)
+
         def update_config(self, **kwargs):
             '''
             Update fields in the config object based on keyword arguments.
@@ -148,6 +156,37 @@ try:
             Placeholder for a remote hardware_version accessor
             '''
             return '0.1'
+
+        @property
+        def hardware_version(self):
+            '''
+            Placeholder for a remote hardware_version accessor
+            '''
+            return '0.1'
+
+        @property
+        def min_waveform_frequency(self):
+            return self.config.min_waveform_frequency
+
+        @min_waveform_frequency.setter
+        def min_waveform_frequency(self, min_waveform_frequency):
+            return self.update_config(min_waveform_frequency=min_waveform_frequency)
+        
+        @property
+        def max_waveform_frequency(self):
+            return self.config.max_waveform_frequency
+
+        @max_waveform_frequency.setter
+        def max_waveform_frequency(self, max_waveform_frequency):
+            return self.update_config(max_waveform_frequency=max_waveform_frequency)
+
+        @property
+        def max_waveform_voltage(self):
+            return self.config.max_waveform_voltage
+
+        @max_waveform_voltage.setter
+        def max_waveform_voltage(self, max_waveform_voltage):
+            return self.update_config(max_waveform_voltage=max_waveform_voltage)
 
 
     class Proxy(ProxyMixin, _Proxy):

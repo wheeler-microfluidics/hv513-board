@@ -22,8 +22,8 @@ message Config {
    *      optional int32 my_int_field = 51;
    */
   optional float max_waveform_voltage = 50 [default = 200];
-  optional float min_waveform_frequency = 51;
-  optional float max_waveform_frequency = 52 [default = 10000];
+  optional float min_waveform_frequency = 51 [default = 0];
+  optional float max_waveform_frequency = 52 [default = 20000];
 }
 
 
@@ -33,4 +33,6 @@ message State {
    * This structure contains fields that can easily be updated through the
    * `update_state` method, but are *not* saved across device resets (i.e., are
    * only stored in RAM). */
+  optional float voltage = 1;
+  optional float frequency = 2 [default = 10000];
 }

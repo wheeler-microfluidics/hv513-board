@@ -112,6 +112,23 @@ public:
     }
     return false;
   }
+
+  bool on_state_frequency_changed(float frequency) {
+    /* This method is triggered whenever a frequency is included in a state
+     * update. */
+    if ((config_._.min_waveform_frequency <= frequency) &&
+                (frequency <= config_._.max_waveform_frequency)) {
+      if (frequency == 0) { // DC mode
+        digitalWrite(Node::BL_PIN, 1); // set not blanked pin high
+        Timer1.stop(); // stop timer
+      } else {
+        Timer1.setPeriod(500000.0 / frequency); // set timer period in ms
+        Timer1.restart();
+      }
+      return true;
+    }
+    return false;
+  }
 };
 
 }  // namespace hv507_switching_board
