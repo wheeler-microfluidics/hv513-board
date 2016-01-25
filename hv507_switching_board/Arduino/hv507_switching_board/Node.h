@@ -7,6 +7,7 @@
 #include <CArrayDefs.h>
 #include "RPCBuffer.h"  // Define packet sizes
 #include "Hv507SwitchingBoard/Properties.h"  // Define package name, URL, etc.
+#include <BaseNodeRpc/BaseNode.h>
 #include <BaseNodeRpc/BaseNodeRpc.h>
 #include <BaseNodeRpc/BaseNodeEeprom.h>
 #include <BaseNodeRpc/BaseNodeI2c.h>
@@ -22,7 +23,7 @@
 #include "hv507_switching_board_config_validate.h"
 #include "hv507_switching_board_state_validate.h"
 #include "Hv507SwitchingBoard/config_pb.h"
-#include "TimerOne/TimerOne.h"
+#include <TimerOne.h>
 
 
 namespace hv507_switching_board {
@@ -62,6 +63,7 @@ public:
   static const uint8_t POL_PIN = 9;
   static const uint8_t BL_PIN = 8;
   static const uint8_t LE_PIN = 4;
+  static const uint8_t BOOST_CONVERTER_CS_PIN = 3;
 
   uint8_t buffer_[BUFFER_SIZE];
   uint8_t state_of_channels_[CHANNEL_COUNT / 8];  // 8 channels per byte
@@ -69,7 +71,7 @@ public:
   Node() : BaseNode(), BaseNodeConfig<config_t>(hv507_switching_board_Config_fields),
            BaseNodeState<state_t>(hv507_switching_board_State_fields) {}
 
-  UInt8Array get_buffer() { return UInt8Array(sizeof(buffer_), buffer_); }
+  UInt8Array get_buffer() { return UInt8Array_init(sizeof(buffer_), buffer_); }
   /* This is a required method to provide a temporary buffer to the
    * `BaseNode...` classes. */
 
@@ -96,7 +98,7 @@ public:
   uint16_t channel_count() const { return CHANNEL_COUNT; }
 
   UInt8Array state_of_channels() const {
-    return UInt8Array(sizeof(state_of_channels_),
+    return UInt8Array_init(sizeof(state_of_channels_),
                       (uint8_t *)&state_of_channels_[0]);
   }
 
@@ -111,6 +113,12 @@ public:
       return true;
     }
     return false;
+  }
+
+  bool set_voltage(uint8_t voltage) {
+    digitalWrite(BOOST_CONVERTER_CS_PIN, 0);
+    SPI.transfer(voltage);
+    digitalWrite(BOOST_CONVERTER_CS_PIN, 1);
   }
 
   bool on_state_frequency_changed(float frequency) {

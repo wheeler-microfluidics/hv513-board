@@ -21,6 +21,7 @@ void Node::begin() {
   pinMode(POL_PIN, OUTPUT);
   pinMode(BL_PIN, OUTPUT);
   pinMode(LE_PIN, OUTPUT);
+  pinMode(BOOST_CONVERTER_CS_PIN, OUTPUT);
 
   // set DIOA as data in
   digitalWrite(DIR_PIN, LOW);
