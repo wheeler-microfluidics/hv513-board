@@ -141,7 +141,7 @@ public:
     float R2 = 2e6;
     float R1 = 10e3;
     const float POT_MAX = 50e3;
-    float value = R2 / ( voltage / 1.5 - 1 ) - R1;
+    float value = R2 / ( 2 * voltage / 1.5 - 1 ) - R1;
     if ( value < POT_MAX && value > 0 ) {
       // This method is triggered whenever a voltage is included in a state
       // update.
