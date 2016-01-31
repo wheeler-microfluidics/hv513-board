@@ -47,7 +47,7 @@ options(
     LIB_PROPERTIES=LIB_PROPERTIES,
     base_classes=['BaseNodeSerialHandler',
                   'BaseNodeEeprom',
-                  #'BaseNodeI2c',
+                  'BaseNodeI2c',
                   'BaseNodeI2cHandler<Handler>',
                   'BaseNodeSpi',
                   'BaseNodeConfig<ConfigMessage, Address>',

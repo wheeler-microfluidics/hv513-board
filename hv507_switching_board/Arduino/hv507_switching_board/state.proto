@@ -1,0 +1,12 @@
+package hv507_switching_board;
+
+message State {
+  /* # State structure #
+   *
+   * This structure contains fields that can easily be updated through the
+   * `update_state` method, but are *not* saved across device resets (i.e., are
+   * only stored in RAM). */
+  optional float voltage = 1 [default = 100];
+  optional float frequency = 2 [default = 10000];
+}
+

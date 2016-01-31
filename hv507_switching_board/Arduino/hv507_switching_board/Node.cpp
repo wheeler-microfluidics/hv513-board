@@ -4,24 +4,11 @@
 namespace hv507_switching_board {
 
 void Node::begin() {
-  config_.set_buffer(get_buffer());
-  config_.validator_.set_node(*this);
-  config_.reset();
-  config_.load();
-  state_.set_buffer(get_buffer());
-  state_.validator_.set_node(*this);
-  // Start Serial after loading config to set baud rate.
-#if !defined(DISABLE_SERIAL)
-  Serial.begin(config_._.baud_rate);
-#endif  // #ifndef DISABLE_SERIAL
-  // Set i2c clock-rate to 400kHz.
-  TWBR = 12;
-
   pinMode(DIR_PIN, OUTPUT);
   pinMode(POL_PIN, OUTPUT);
   pinMode(BL_PIN, OUTPUT);
   pinMode(LE_PIN, OUTPUT);
-  pinMode(BOOST_CONVERTER_CS_PIN, OUTPUT);
+  pinMode(MCP41050_CS_PIN, OUTPUT);
 
   // set DIOA as data in
   digitalWrite(DIR_PIN, LOW);
@@ -33,11 +20,33 @@ void Node::begin() {
   digitalWrite(POL_PIN, HIGH);
 
   digitalWrite(LE_PIN, HIGH);  // ensure SS stays high for now
+  digitalWrite(MCP41050_CS_PIN, HIGH);
 
   // Put SCK, MOSI, SS pins into output mode
   // also put SCK, MOSI into LOW state, and SS into HIGH state.
   // Then put SPI hardware into Master mode and turn SPI on
   SPI.begin();
+
+  config_.set_buffer(get_buffer());
+  config_.validator_.set_node(*this);
+  config_.reset();
+  config_.load();
+  state_.set_buffer(get_buffer());
+  state_.validator_.set_node(*this);
+  state_.reset();
+  // Mark voltage, frequency state for validation.
+  state_._.has_voltage = true;
+  state_._.has_frequency = true;
+  // Validate state to trigger on-changed handling for state fields that are
+  // set (which initializes the state to the default values supplied in the
+  // state protocol buffer definition).
+  state_.validate();
+  // Start Serial after loading config to set baud rate.
+#if !defined(DISABLE_SERIAL)
+  Serial.begin(115200);
+#endif  // #ifndef DISABLE_SERIAL
+  // Set i2c clock-rate to 400kHz.
+  TWBR = 12;
 
   // set all channels into off state
   digitalWrite(LE_PIN, 0);
