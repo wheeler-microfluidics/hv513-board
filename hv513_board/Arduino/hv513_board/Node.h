@@ -57,13 +57,16 @@ public:
   static void timer_callback();
 
   static const uint16_t BUFFER_SIZE = 128;  // >= longest property string
-  static const uint16_t CHANNEL_COUNT = 128;
+  static const uint16_t CHANNEL_COUNT = 8;
 
-  // pins connected to the HV507
-  static const uint8_t DIR_PIN = 10;
-  static const uint8_t POL_PIN = 9;
-  static const uint8_t BL_PIN = 8;
-  static const uint8_t LE_PIN = 4;
+  // pins connected to the HV513
+  static const uint8_t POL_PIN = 5;
+  static const uint8_t BL_PIN = 4;
+  static const uint8_t HI_Z_PIN = 7;
+  static const uint8_t HV513_CS_PIN = 6;
+  
+
+  // pins connected to the boost converter
   static const uint8_t MCP41050_CS_PIN = 3;
   static const uint8_t SHDN_PIN = 2;
 
@@ -106,12 +109,12 @@ public:
 
   bool set_state_of_channels(UInt8Array channel_states) {
     if (channel_states.length == sizeof(state_of_channels_)) {
-      digitalWrite(LE_PIN, 0);
+      digitalWrite(HV513_CS_PIN, 0);
       for (uint16_t i = 0; i < channel_states.length; i++) {
         state_of_channels_[i] = channel_states.data[i];
         SPI.transfer(state_of_channels_[i]);
       }
-      digitalWrite(LE_PIN, 1);
+      digitalWrite(HV513_CS_PIN, 1);
       return true;
     }
     return false;
@@ -134,7 +137,7 @@ public:
     return false;
   }
 
- bool on_state_voltage_changed(float voltage) {
+  bool on_state_voltage_changed(float voltage) {
     float R2 = 2e6;
     float R1 = 10e3;
     const float POT_MAX = 50e3;
@@ -152,9 +155,29 @@ public:
       // take the SS pin high to de-select the chip:
       digitalWrite(MCP41050_CS_PIN, HIGH);
       SPI.endTransaction();
+
+      // for some reason all channels seem to lose their state (i.e., they
+      // are set to zero) when we change the voltage, so whenever the voltage
+      // changes, we reapply the channel state
+      _update_channel_state(state_._.output_enabled);
       return true;
     }
     return false;
+  }
+
+  bool on_state_output_enabled_changed(bool value) {
+    digitalWrite(SHDN_PIN, !value);
+    _update_channel_state(value);
+    return true;
+  }
+
+  void _update_channel_state(bool enabled) {
+    digitalWrite(HV513_CS_PIN, 0);
+    for (uint16_t i = 0; i < CHANNEL_COUNT / 8; i++) {
+      state_of_channels_[i] = (uint8_t)enabled * 0xFF;
+      SPI.transfer(state_of_channels_[i]);
+    }
+    digitalWrite(HV513_CS_PIN, 1);
   }
 };
 

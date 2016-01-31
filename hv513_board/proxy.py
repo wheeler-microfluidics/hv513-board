@@ -42,6 +42,14 @@ try:
         def voltage(self, value):
             return self.update_state(voltage=value)
 
+        @property
+        def output_enabled(self):
+            return self.state['output_enabled']
+
+        @output_enabled.setter
+        def output_enabled(self, value):
+            return self.update_state(output_enabled=value)
+
         def _state_of_channels(self):
             '''
             Prepend underscore to the auto-generated state_of_channels accessor

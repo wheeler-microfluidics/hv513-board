@@ -4,25 +4,27 @@
 namespace hv513_board {
 
 void Node::begin() {
-  pinMode(DIR_PIN, OUTPUT);
   pinMode(POL_PIN, OUTPUT);
   pinMode(BL_PIN, OUTPUT);
-  pinMode(LE_PIN, OUTPUT);
+  pinMode(HI_Z_PIN, OUTPUT);
+  pinMode(HV513_CS_PIN, OUTPUT);
   pinMode(MCP41050_CS_PIN, OUTPUT);
   pinMode(SHDN_PIN, OUTPUT);
 
+  // set shutdown pin LOW to enable the boost converter
   digitalWrite(SHDN_PIN, LOW);
 
-  // set DIOA as data in
-  digitalWrite(DIR_PIN, LOW);
+  // set not HI-Z to take chip out of high impedance state 
+  digitalWrite(HI_Z_PIN, HIGH);
 
   // set not blank to LOW (blanked)
   digitalWrite(BL_PIN, LOW);
 
-  // set polarity to ?
+  // set polarity to normal 
   digitalWrite(POL_PIN, HIGH);
 
-  digitalWrite(LE_PIN, HIGH);  // ensure SS stays high for now
+  // ensure SS pins stay high for now
+  digitalWrite(HV513_CS_PIN, HIGH);
   digitalWrite(MCP41050_CS_PIN, HIGH);
 
   // Put SCK, MOSI, SS pins into output mode
@@ -40,6 +42,7 @@ void Node::begin() {
   // Mark voltage, frequency state for validation.
   state_._.has_voltage = true;
   state_._.has_frequency = true;
+  state_._.has_output_enabled = true;
   // Validate state to trigger on-changed handling for state fields that are
   // set (which initializes the state to the default values supplied in the
   // state protocol buffer definition).
@@ -52,11 +55,11 @@ void Node::begin() {
   TWBR = 12;
 
   // set all channels into off state
-  digitalWrite(LE_PIN, 0);
+  digitalWrite(HV513_CS_PIN, 0);
   for (uint16_t i = 0; i < CHANNEL_COUNT / 8; i++) {
     SPI.transfer(state_of_channels_[i]);
   }
-  digitalWrite(LE_PIN, 1);
+  digitalWrite(HV513_CS_PIN, 1);
 
   Timer1.initialize(50); // initialize timer1, and set a 0.05 ms period
 

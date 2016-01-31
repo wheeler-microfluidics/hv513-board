@@ -8,5 +8,6 @@ message State {
    * only stored in RAM). */
   optional float voltage = 1 [default = 100];
   optional float frequency = 2 [default = 10000];
+  optional bool output_enabled = 3 [default = false];
 }
 
