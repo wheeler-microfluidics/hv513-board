@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include "Node.h"
 
-namespace hv507_switching_board {
+namespace hv513_board {
 
 void Node::begin() {
   pinMode(DIR_PIN, OUTPUT);
@@ -9,6 +9,9 @@ void Node::begin() {
   pinMode(BL_PIN, OUTPUT);
   pinMode(LE_PIN, OUTPUT);
   pinMode(MCP41050_CS_PIN, OUTPUT);
+  pinMode(SHDN_PIN, OUTPUT);
+
+  digitalWrite(SHDN_PIN, LOW);
 
   // set DIOA as data in
   digitalWrite(DIR_PIN, LOW);
@@ -75,4 +78,4 @@ void Node::set_i2c_address(uint8_t value) {
   config_._.i2c_address = address;
 }
 
-}  // namespace hv507_switching_board
+}  // namespace hv513_board

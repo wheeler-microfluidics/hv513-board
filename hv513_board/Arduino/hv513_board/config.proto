@@ -1,4 +1,4 @@
-package hv507_switching_board;
+package hv513_board;
 
 message Config {
   /* # Configuration structure #
@@ -24,15 +24,4 @@ message Config {
   optional float max_waveform_voltage = 50 [default = 200];
   optional float min_waveform_frequency = 51 [default = 0];
   optional float max_waveform_frequency = 52 [default = 20000];
-}
-
-
-message State {
-  /* # State structure #
-   *
-   * This structure contains fields that can easily be updated through the
-   * `update_state` method, but are *not* saved across device resets (i.e., are
-   * only stored in RAM). */
-  optional float voltage = 1;
-  optional float frequency = 2 [default = 10000];
 }

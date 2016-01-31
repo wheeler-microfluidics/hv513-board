@@ -6,6 +6,6 @@ include pavement.py
 include paver-minilib.zip
 include setup.py
 include SConstruct
-recursive-include hv507_switching_board *
-recursive-exclude hv507_switching_board *.pyc
-recursive-exclude hv507_switching_board *.o
+recursive-include hv513_board *
+recursive-exclude hv513_board *.pyc
+recursive-exclude hv513_board *.o

@@ -14,8 +14,8 @@
 #include "TimerOne.h"
 
 
-hv507_switching_board::Node node_obj;
-hv507_switching_board::CommandProcessor<hv507_switching_board::Node> command_processor(node_obj);
+hv513_board::Node node_obj;
+hv513_board::CommandProcessor<hv513_board::Node> command_processor(node_obj);
 
 
 void i2c_receive_event(int byte_count) { node_obj.i2c_handler_.receiver()(byte_count); }

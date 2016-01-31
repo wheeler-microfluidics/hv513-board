@@ -65,4 +65,4 @@ def parse_args(args=None):
 
 if __name__ == '__main__':
     args = parse_args()
-    main('.', 'hv507-switching-board', args.new_name)
+    main('.', 'hv513-board', args.new_name)

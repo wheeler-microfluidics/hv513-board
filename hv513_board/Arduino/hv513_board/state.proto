@@ -1,4 +1,4 @@
-package hv507_switching_board;
+package hv513_board;
 
 message State {
   /* # State structure #

@@ -6,7 +6,7 @@
 #include <NadaMQ.h>
 #include <CArrayDefs.h>
 #include "RPCBuffer.h"  // Define packet sizes
-#include "Hv507SwitchingBoard/Properties.h"  // Define package name, URL, etc.
+#include "Hv513Board/Properties.h"  // Define package name, URL, etc.
 #include <BaseNodeRpc/BaseNode.h>
 #include <BaseNodeRpc/BaseNodeRpc.h>
 #include <BaseNodeRpc/BaseNodeEeprom.h>
@@ -20,13 +20,14 @@
 #include <BaseNodeRpc/SerialHandler.h>
 #include <pb_validate.h>
 #include <pb_eeprom.h>
-#include "hv507_switching_board_config_validate.h"
-#include "hv507_switching_board_state_validate.h"
-#include "Hv507SwitchingBoard/config_pb.h"
+#include "hv513_board_config_validate.h"
+#include "hv513_board_state_validate.h"
+#include "Hv513Board/config_pb.h"
+#include "Hv513Board/state_pb.h"
 #include <TimerOne.h>
 
 
-namespace hv507_switching_board {
+namespace hv513_board {
 const size_t FRAME_SIZE = (3 * sizeof(uint8_t)  // Frame boundary
                            - sizeof(uint16_t)  // UUID
                            - sizeof(uint16_t)  // Payload length
@@ -34,9 +35,9 @@ const size_t FRAME_SIZE = (3 * sizeof(uint8_t)  // Frame boundary
 
 class Node;
 
-typedef nanopb::EepromMessage<hv507_switching_board_Config,
+typedef nanopb::EepromMessage<hv513_board_Config,
                               config_validate::Validator<Node> > config_t;
-typedef nanopb::Message<hv507_switching_board_State,
+typedef nanopb::Message<hv513_board_State,
                         state_validate::Validator<Node> > state_t;
 
 class Node :
@@ -63,13 +64,14 @@ public:
   static const uint8_t POL_PIN = 9;
   static const uint8_t BL_PIN = 8;
   static const uint8_t LE_PIN = 4;
-  static const uint8_t BOOST_CONVERTER_CS_PIN = 3;
+  static const uint8_t MCP41050_CS_PIN = 3;
+  static const uint8_t SHDN_PIN = 2;
 
   uint8_t buffer_[BUFFER_SIZE];
   uint8_t state_of_channels_[CHANNEL_COUNT / 8];  // 8 channels per byte
 
-  Node() : BaseNode(), BaseNodeConfig<config_t>(hv507_switching_board_Config_fields),
-           BaseNodeState<state_t>(hv507_switching_board_State_fields) {}
+  Node() : BaseNode(), BaseNodeConfig<config_t>(hv513_board_Config_fields),
+           BaseNodeState<state_t>(hv513_board_State_fields) {}
 
   UInt8Array get_buffer() { return UInt8Array_init(sizeof(buffer_), buffer_); }
   /* This is a required method to provide a temporary buffer to the
@@ -115,10 +117,10 @@ public:
     return false;
   }
 
-  bool set_voltage(uint8_t voltage) {
-    digitalWrite(BOOST_CONVERTER_CS_PIN, 0);
+  void set_voltage(uint8_t voltage) {
+    digitalWrite(MCP41050_CS_PIN, 0);
     SPI.transfer(voltage);
-    digitalWrite(BOOST_CONVERTER_CS_PIN, 1);
+    digitalWrite(MCP41050_CS_PIN, 1);
   }
 
   bool on_state_frequency_changed(float frequency) {
@@ -139,7 +141,7 @@ public:
   }
 };
 
-}  // namespace hv507_switching_board
+}  // namespace hv513_board
 
 
 #endif  // #ifndef ___NODE__H___
