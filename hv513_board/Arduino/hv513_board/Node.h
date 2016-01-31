@@ -117,12 +117,6 @@ public:
     return false;
   }
 
-  void set_voltage(uint8_t voltage) {
-    digitalWrite(MCP41050_CS_PIN, 0);
-    SPI.transfer(voltage);
-    digitalWrite(MCP41050_CS_PIN, 1);
-  }
-
   bool on_state_frequency_changed(float frequency) {
     /* This method is triggered whenever a frequency is included in a state
      * update. */
@@ -135,6 +129,29 @@ public:
         Timer1.setPeriod(500000.0 / frequency); // set timer period in ms
         Timer1.restart();
       }
+      return true;
+    }
+    return false;
+  }
+
+ bool on_state_voltage_changed(float voltage) {
+    float R2 = 2e6;
+    float R1 = 10e3;
+    const float POT_MAX = 50e3;
+    float value = R2 / ( voltage / 1.5 - 1 ) - R1;
+    if ( value < POT_MAX && value > 0 ) {
+      // This method is triggered whenever a voltage is included in a state
+      // update.
+      SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+      // take the SS pin low to select the chip:
+      digitalWrite(MCP41050_CS_PIN, LOW);
+      // Send Command to write value and enable the pot
+      SPI.transfer(0x1F);
+      //  send in the value via SPI:
+      SPI.transfer(255 - value / POT_MAX * 255);
+      // take the SS pin high to de-select the chip:
+      digitalWrite(MCP41050_CS_PIN, HIGH);
+      SPI.endTransaction();
       return true;
     }
     return false;

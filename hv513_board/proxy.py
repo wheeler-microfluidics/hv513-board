@@ -1,76 +1,47 @@
 from path_helpers import path
 try:
+    from base_node_rpc.proxy import ConfigMixinBase, StateMixinBase
     from .node import (Proxy as _Proxy, I2cProxy as _I2cProxy,
                        SerialProxy as _SerialProxy)
+    from .config import Config
+    from .state import State
 
-    class ProxyMixin(object):
+
+    class ConfigMixin(ConfigMixinBase):
+        @property
+        def config_class(self):
+            return Config
+
+
+    class StateMixin(StateMixinBase):
+        @property
+        def state_class(self):
+            return State
+
+
+    class ProxyMixin(ConfigMixin, StateMixin):
         '''
         Mixin class to add convenience wrappers around methods of the generated
         `node.Proxy` class.
-
-        For example, expose config and state getters/setters as attributes.
         '''
         host_package_name = str(path(__file__).parent.name.replace('_', '-'))
 
         @property
-        def config(self):
-            from .config import Config
-
-            return Config.FromString(self.serialize_config().tostring())
-
-        @config.setter
-        def config(self, value):
-            return self.update_config(value)
-
-        @property
-        def state(self):
-            from .config import State
-
-            return State.FromString(self.serialize_state().tostring())
-
-        @state.setter
-        def state(self, value):
-            return self.update_state(value)
-
-        @property
         def frequency(self):
-            return self.state.frequency
+            return self.state['frequency']
         
         @frequency.setter
         def frequency(self, value):
             return self.update_state(frequency=value)
 
-        def update_config(self, **kwargs):
-            '''
-            Update fields in the config object based on keyword arguments.
+        @property
+        def voltage(self):
+            return self.state['voltage']
 
-            By default, these values will be saved to EEPROM. To prevent this
-            (e.g., to verify system behavior before committing the changes),
-            you can pass the special keyword argument 'save=False'. In this case,
-            you will need to call the method save_config() to make your changes
-            persistent.
-            '''
+        @voltage.setter
+        def voltage(self, value):
+            return self.update_state(voltage=value)
 
-            from .config import Config
-
-            save = True
-            if 'save' in kwargs.keys() and not kwargs.pop('save'):
-                save = False
-
-            config = Config(**kwargs)
-            return_code = super(ProxyMixin, self).update_config(config)
-
-            if save:
-                super(ProxyMixin, self).save_config()
-
-            return return_code
-
-        def update_state(self, **kwargs):
-            from .config import State
-
-            state = State(**kwargs)
-            return super(ProxyMixin, self).update_state(state)
-        
         def _state_of_channels(self):
             '''
             Prepend underscore to the auto-generated state_of_channels accessor
@@ -121,7 +92,7 @@ try:
                 
         @property
         def baud_rate(self):
-            return self.config.baud_rate
+            return self.config['baud_rate']
 
         @baud_rate.setter
         def baud_rate(self, baud_rate):
@@ -129,7 +100,7 @@ try:
 
         @property
         def serial_number(self):
-            return self.config.serial_number
+            return self.config['serial_number']
 
         @serial_number.setter
         def serial_number(self, serial_number):
@@ -166,7 +137,7 @@ try:
 
         @property
         def min_waveform_frequency(self):
-            return self.config.min_waveform_frequency
+            return self.config['min_waveform_frequency']
 
         @min_waveform_frequency.setter
         def min_waveform_frequency(self, min_waveform_frequency):
@@ -174,7 +145,7 @@ try:
         
         @property
         def max_waveform_frequency(self):
-            return self.config.max_waveform_frequency
+            return self.config['max_waveform_frequency']
 
         @max_waveform_frequency.setter
         def max_waveform_frequency(self, max_waveform_frequency):
@@ -182,7 +153,7 @@ try:
 
         @property
         def max_waveform_voltage(self):
-            return self.config.max_waveform_voltage
+            return self.config['max_waveform_voltage']
 
         @max_waveform_voltage.setter
         def max_waveform_voltage(self, max_waveform_voltage):
