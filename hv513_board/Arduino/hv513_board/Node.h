@@ -57,21 +57,25 @@ public:
   static void timer_callback();
 
   static const uint16_t BUFFER_SIZE = 128;  // >= longest property string
-  static const uint16_t CHANNEL_COUNT = 8;
+  static const uint16_t MAX_CHANNEL_COUNT = 120;
 
   // pins connected to the HV513
   static const uint8_t POL_PIN = 5;
   static const uint8_t BL_PIN = 4;
   static const uint8_t HI_Z_PIN = 7;
   static const uint8_t HV513_CS_PIN = 6;
-  
 
   // pins connected to the boost converter
   static const uint8_t MCP41050_CS_PIN = 3;
   static const uint8_t SHDN_PIN = 2;
 
+  // PCA9505 (gpio) chip/register addresses
+  static const uint8_t PCA9505_CONFIG_IO_REGISTER_ = 0x18;
+  static const uint8_t PCA9505_OUTPUT_PORT_REGISTER_ = 0x08;
+
   uint8_t buffer_[BUFFER_SIZE];
-  uint8_t state_of_channels_[CHANNEL_COUNT / 8];  // 8 channels per byte
+  uint8_t state_of_channels_[MAX_CHANNEL_COUNT / 8];
+  uint16_t number_of_channels_;
 
   Node() : BaseNode(), BaseNodeConfig<config_t>(hv513_board_Config_fields),
            BaseNodeState<state_t>(hv513_board_State_fields) {}
@@ -100,21 +104,46 @@ public:
    * [1]: https://github.com/wheeler-microfluidics/arduino_rpc
    * [2]: https://github.com/wheeler-microfluidics/base_node_rpc
    */
-  uint16_t channel_count() const { return CHANNEL_COUNT; }
+  uint16_t channel_count() const { return number_of_channels_; }
 
-  UInt8Array state_of_channels() const {
-    return UInt8Array_init(sizeof(state_of_channels_),
+  UInt8Array state_of_channels() {
+    for (uint8_t chip = 0; chip < number_of_channels_ / 40; chip++) {
+      for (uint8_t port = 0; port < 5; port++) {
+        Wire.beginTransmission((uint8_t)config_._.switching_board_i2c_address + chip);
+        Wire.write(PCA9505_OUTPUT_PORT_REGISTER_ + port);
+        Wire.endTransmission();
+        Wire.requestFrom(config_._.switching_board_i2c_address + chip, 1);
+        if (Wire.available()) {
+          state_of_channels_[chip*5 + port] = ~Wire.read();
+        } else {
+          return UInt8Array_init_default();
+        }
+      }
+    }
+    return UInt8Array_init(number_of_channels_ / 8,
                       (uint8_t *)&state_of_channels_[0]);
   }
 
   bool set_state_of_channels(UInt8Array channel_states) {
     if (channel_states.length == sizeof(state_of_channels_)) {
-      digitalWrite(HV513_CS_PIN, 0);
       for (uint16_t i = 0; i < channel_states.length; i++) {
         state_of_channels_[i] = channel_states.data[i];
-        SPI.transfer(state_of_channels_[i]);
       }
-      digitalWrite(HV513_CS_PIN, 1);
+      // Each PCA9505 chip has 5 8-bit output registers for a total of 40 outputs
+      // per chip. We can have up to 8 of these chips on an I2C bus, which means
+      // we can control up to 320 channels.
+      //   Each register represent 8 channels (i.e. the first register on the
+      // first PCA9505 chip stores the state of channels 0-7, the second register
+      // represents channels 8-15, etc.).
+      uint8_t data[2];
+      for (uint8_t chip = 0; chip < number_of_channels_ / 40; chip++) {
+        for (uint8_t port = 0; port < 5; port++) {
+          data[0] = PCA9505_OUTPUT_PORT_REGISTER_ + port;
+          data[1] = ~state_of_channels_[chip*5 + port];
+          i2c_write(config_._.switching_board_i2c_address + chip,
+                    UInt8Array_init(2, (uint8_t *)&data[0]));
+        }
+      }
       return true;
     }
     return false;
@@ -156,10 +185,12 @@ public:
       digitalWrite(MCP41050_CS_PIN, HIGH);
       SPI.endTransaction();
 
-      // for some reason all channels seem to lose their state (i.e., they
+      // for some reason, the HV513 seems to lose its state (i.e., all outputs
       // are set to zero) when we change the voltage, so whenever the voltage
-      // changes, we reapply the channel state
-      _update_channel_state(state_._.output_enabled);
+      // changes, reapply the state
+      digitalWrite(HV513_CS_PIN, 0);
+      SPI.transfer((uint8_t)state_._.output_enabled * 0xFF);
+      digitalWrite(HV513_CS_PIN, 1);
       return true;
     }
     return false;
@@ -167,18 +198,13 @@ public:
 
   bool on_state_output_enabled_changed(bool value) {
     digitalWrite(SHDN_PIN, !value);
-    _update_channel_state(value);
+    digitalWrite(HV513_CS_PIN, 0);
+    SPI.transfer((uint8_t)value * 0xFF);
+    digitalWrite(HV513_CS_PIN, 1);
     return true;
   }
 
-  void _update_channel_state(bool enabled) {
-    digitalWrite(HV513_CS_PIN, 0);
-    for (uint16_t i = 0; i < CHANNEL_COUNT / 8; i++) {
-      state_of_channels_[i] = (uint8_t)enabled * 0xFF;
-      SPI.transfer(state_of_channels_[i]);
-    }
-    digitalWrite(HV513_CS_PIN, 1);
-  }
+  void _initialize_switching_boards();
 };
 
 }  // namespace hv513_board

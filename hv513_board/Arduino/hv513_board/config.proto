@@ -24,4 +24,5 @@ message Config {
   optional float max_waveform_voltage = 50 [default = 200];
   optional float min_waveform_frequency = 51 [default = 0];
   optional float max_waveform_frequency = 52 [default = 20000];
+  optional uint32 switching_board_i2c_address =  53 [default = 32];
 }
