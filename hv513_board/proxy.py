@@ -92,7 +92,7 @@ try:
             '''
             import numpy as np
             
-            ok =  (super(ProxyMixin, self)
+            ok = (super(ProxyMixin, self)
                     .set_state_of_channels(np.packbits(states.astype(int))))
             if not ok:
                 raise ValueError('Error setting state of channels.  Check '
@@ -122,20 +122,13 @@ try:
         def port(self, port):
             return self.update_config(port=port)
         
-        def _channel_count(self):
-            return super(ProxyMixin, self).channel_count()
+        def _number_of_channels(self):
+            return super(ProxyMixin, self).number_of_channels()
         
         @property
-        def channel_count(self):
-            return self._channel_count()
+        def number_of_channels(self):
+            return self._number_of_channels()
         
-        @property
-        def hardware_version(self):
-            '''
-            Placeholder for a remote hardware_version accessor
-            '''
-            return '0.1'
-
         @property
         def hardware_version(self):
             '''

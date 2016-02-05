@@ -57,7 +57,7 @@ public:
   static void timer_callback();
 
   static const uint16_t BUFFER_SIZE = 128;  // >= longest property string
-  static const uint16_t MAX_CHANNEL_COUNT = 120;
+  static const uint16_t MAX_NUMBER_OF_CHANNELS = 120;
 
   // pins connected to the HV513
   static const uint8_t POL_PIN = 5;
@@ -74,7 +74,7 @@ public:
   static const uint8_t PCA9505_OUTPUT_PORT_REGISTER_ = 0x08;
 
   uint8_t buffer_[BUFFER_SIZE];
-  uint8_t state_of_channels_[MAX_CHANNEL_COUNT / 8];
+  uint8_t state_of_channels_[MAX_NUMBER_OF_CHANNELS / 8];
   uint16_t number_of_channels_;
 
   Node() : BaseNode(), BaseNodeConfig<config_t>(hv513_board_Config_fields),
@@ -104,7 +104,7 @@ public:
    * [1]: https://github.com/wheeler-microfluidics/arduino_rpc
    * [2]: https://github.com/wheeler-microfluidics/base_node_rpc
    */
-  uint16_t channel_count() const { return number_of_channels_; }
+  uint16_t number_of_channels() const { return number_of_channels_; }
 
   UInt8Array state_of_channels() {
     for (uint8_t chip = 0; chip < number_of_channels_ / 40; chip++) {
@@ -125,7 +125,7 @@ public:
   }
 
   bool set_state_of_channels(UInt8Array channel_states) {
-    if (channel_states.length == sizeof(state_of_channels_)) {
+    if (channel_states.length == number_of_channels_ / 8) {
       for (uint16_t i = 0; i < channel_states.length; i++) {
         state_of_channels_[i] = channel_states.data[i];
       }
@@ -135,13 +135,13 @@ public:
       //   Each register represent 8 channels (i.e. the first register on the
       // first PCA9505 chip stores the state of channels 0-7, the second register
       // represents channels 8-15, etc.).
-      uint8_t data[2];
       for (uint8_t chip = 0; chip < number_of_channels_ / 40; chip++) {
         for (uint8_t port = 0; port < 5; port++) {
-          data[0] = PCA9505_OUTPUT_PORT_REGISTER_ + port;
-          data[1] = ~state_of_channels_[chip*5 + port];
+          buffer_[0] = PCA9505_OUTPUT_PORT_REGISTER_ + port;
+          buffer_[1] = ~state_of_channels_[chip*5 + port];
           i2c_write(config_._.switching_board_i2c_address + chip,
-                    UInt8Array_init(2, (uint8_t *)&data[0]));
+                    UInt8Array_init(2, (uint8_t *)&buffer_[0]));
+          delayMicroseconds(200); // this delay is necessary if we are operating with a 400kbps i2c clock
         }
       }
       return true;

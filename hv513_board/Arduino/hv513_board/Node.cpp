@@ -1,3 +1,4 @@
+#include <Wire.h>
 #include <SPI.h>
 #include "Node.h"
 
@@ -28,6 +29,7 @@ void Node::begin() {
   // also put SCK, MOSI into LOW state, and SS into HIGH state.
   // Then put SPI hardware into Master mode and turn SPI on
   SPI.begin();
+  Wire.begin();
 
   config_.set_buffer(get_buffer());
   config_.validator_.set_node(*this);
@@ -55,7 +57,6 @@ void Node::begin() {
 
   // attach timer_callback() as a timer overflow interrupt
   Timer1.attachInterrupt(timer_callback);
-
   _initialize_switching_boards();
 }
 
@@ -64,13 +65,12 @@ void Node::_initialize_switching_boards() {
   // address must equal the previous boards address +1 to be valid.
   number_of_channels_ = 0;
 
-  uint8_t data[2];
   for (uint8_t chip = 0; chip < 8; chip++) {
     // set IO ports as inputs
-    data[0] = PCA9505_CONFIG_IO_REGISTER_;
-    data[1] = 0xFF;
+    buffer_[0] = PCA9505_CONFIG_IO_REGISTER_;
+    buffer_[1] = 0xFF;
     i2c_write((uint8_t)config_._.switching_board_i2c_address + chip,
-              UInt8Array_init(2, (uint8_t *)&data[0]));
+              UInt8Array_init(2, (uint8_t *)&buffer_[0]));
 
     // read back the register value
     // if it matches what we previously set, this might be a PCA9505 chip
@@ -78,20 +78,19 @@ void Node::_initialize_switching_boards() {
       // try setting all ports in output mode and initialize to ground
       uint8_t port=0;
       for (; port<5; port++) {
-        data[0] = PCA9505_CONFIG_IO_REGISTER_ + port;
-        data[1] = 0x00;
+        buffer_[0] = PCA9505_CONFIG_IO_REGISTER_ + port;
+        buffer_[1] = 0x00;
         i2c_write((uint8_t)config_._.switching_board_i2c_address + chip,
-                  UInt8Array_init(2, (uint8_t *)&data[0]));
-        data[0] = i2c_read((uint8_t)config_._.switching_board_i2c_address + chip, 1).data[0];
+                  UInt8Array_init(2, (uint8_t *)&buffer_[0]));
 
         // check that we successfully set the IO config register to 0x00
         if (i2c_read((uint8_t)config_._.switching_board_i2c_address + chip, 1).data[0] != 0x00) {
           return;
         }
-        data[0] = PCA9505_OUTPUT_PORT_REGISTER_ + port;
-        data[1] = 0xFF;
+        buffer_[0] = PCA9505_OUTPUT_PORT_REGISTER_ + port;
+        buffer_[1] = 0xFF;
         i2c_write((uint8_t)config_._.switching_board_i2c_address + chip,
-                  UInt8Array_init(2, (uint8_t *)&data[0]));
+                  UInt8Array_init(2, (uint8_t *)&buffer_[0]));
       }
 
       // if port=5, it means that we successfully initialized all IO config
