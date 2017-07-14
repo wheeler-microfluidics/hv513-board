@@ -1,3 +1,4 @@
+![https://ci.appveyor.com/api/projects/status/github/wheeler-microfluidics/hv513-board?branch=master&svg=true](https://ci.appveyor.com/api/projects/status/github/wheeler-microfluidics/hv513-board?branch=master&svg=true)
 # hv513-board #
 
 Template package for remote procedure call (RPC) project, utilizing
